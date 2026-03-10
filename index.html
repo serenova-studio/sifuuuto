@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>シフト給与管理</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F4FBF9; --main: #9EDFD6; --accent: #7BC6BE; --accent2: #5aafa6;
+  --text: #3A3A3A; --subtext: #888; --card: #fff;
+  --shadow: rgba(126,198,190,0.20); --shadow2: rgba(126,198,190,0.10);
+  --kari-bg: #e6f7f5; --kari-border: #9EDFD6; --confirm-bg: #c8ede9;
+  --sun: #FF7F8A; --sat: #7BC6BE; --danger: #ff8c94;
+}
+.theme-blue {
+  --bg: #F5F8FF; --main: #BFD7FF; --accent: #8FB6FF; --accent2: #6b9fff;
+  --text: #2F3440; --card: #fff; --shadow: rgba(143,182,255,0.20); --shadow2: rgba(143,182,255,0.10);
+  --kari-bg: #eef3ff; --kari-border: #BFD7FF; --confirm-bg: #d0e3ff; --sun: #FF7F8A; --sat: #8FB6FF;
+}
+.theme-peach {
+  --bg: #FFF2F2; --main: #FFB7B2; --accent: #FF8C94; --accent2: #ff6b76;
+  --text: #3D3D3D; --card: #fff; --shadow: rgba(255,140,148,0.20); --shadow2: rgba(255,140,148,0.10);
+  --kari-bg: #fff0f0; --kari-border: #FFB7B2; --confirm-bg: #ffd0ce; --sun: #FF7F8A; --sat: #FFB7B2;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'M PLUS Rounded 1c',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:72px;transition:background .35s;overflow-x:hidden;}
+
+/* HEADER */
+.app-header{position:sticky;top:0;z-index:90;background:var(--bg);padding:10px 14px 8px;transition:background .35s;}
+.summary-card{background:var(--card);border-radius:22px;padding:14px 16px 12px;box-shadow:0 6px 24px var(--shadow);}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;}
+.nav-btn{background:var(--main);border:none;border-radius:50%;width:28px;height:28px;font-size:15px;font-weight:900;cursor:pointer;color:var(--text);transition:background .2s,transform .1s;display:flex;align-items:center;justify-content:center;}
+.nav-btn:active{transform:scale(.88);}
+.month-label{font-size:17px;font-weight:900;color:var(--accent);letter-spacing:1px;}
+.stats-row{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;margin-bottom:10px;}
+.stat-div{background:#eee;}
+.stat-item{text-align:center;padding:0 4px;}
+.stat-lbl{font-size:10px;color:var(--subtext);margin-bottom:2px;}
+.stat-val{font-size:15px;font-weight:900;color:var(--accent);line-height:1.1;}
+.goal-row{display:flex;align-items:center;gap:8px;}
+.goal-prog{flex:1;height:7px;background:#eee;border-radius:10px;overflow:hidden;}
+.goal-fill{height:100%;background:linear-gradient(90deg,var(--main),var(--accent));border-radius:10px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+.goal-txt{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;}
+.goal-edit{background:none;border:none;font-size:14px;cursor:pointer;padding:2px;}
+
+/* TABS */
+.tab-bar{display:flex;background:var(--card);border-radius:16px;padding:4px;margin:8px 14px;box-shadow:0 2px 10px var(--shadow2);}
+.tab-btn{flex:1;padding:8px 4px;border:none;background:none;font-family:inherit;font-size:12px;font-weight:700;color:var(--subtext);border-radius:12px;cursor:pointer;transition:all .2s;}
+.tab-btn.active{background:var(--main);color:var(--text);box-shadow:0 2px 8px var(--shadow);}
+
+/* CALENDAR */
+.cal-wrap{padding:0 14px 10px;}
+.cal-card{background:var(--card);border-radius:22px;padding:12px 10px;box-shadow:0 4px 18px var(--shadow2);}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:4px;}
+.cal-dow span{font-size:11px;font-weight:800;padding:3px 0;}
+.cal-dow .sun{color:var(--sun);} .cal-dow .sat{color:var(--sat);}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day{border-radius:10px;padding:3px 2px 4px;cursor:pointer;transition:all .15s;min-height:54px;display:flex;flex-direction:column;align-items:center;position:relative;}
+.cal-day:active{transform:scale(.93);}
+.cal-day.empty{cursor:default;pointer-events:none;}
+.cal-day.today{background:var(--main)!important;}
+.cal-day.has-c{background:var(--confirm-bg);}
+.cal-day.has-k{background:var(--kari-bg);border:1.5px dashed var(--kari-border);}
+.cal-day.has-ck{background:linear-gradient(135deg,var(--confirm-bg) 50%,var(--kari-bg) 50%);border:1.5px dashed var(--kari-border);}
+.cal-day:not(.empty):not(.has-c):not(.has-k):not(.has-ck):hover{background:var(--kari-bg);}
+.day-num{font-size:11px;font-weight:800;line-height:1;margin-bottom:1px;align-self:flex-start;margin-left:3px;}
+.col-sun .day-num{color:var(--sun);} .col-sat .day-num{color:var(--sat);}
+.day-chips{display:flex;flex-direction:column;align-items:center;gap:1px;width:100%;}
+.day-chip{display:flex;flex-direction:column;align-items:center;width:100%;}
+.chip-emo{font-size:12px;line-height:1.1;}
+.chip-nm{font-size:8px;font-weight:700;color:var(--accent);line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chip-am{font-size:8px;font-weight:900;color:var(--text);line-height:1.1;}
+.kari-dot{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.7;}
+
+/* COMPANIES VIEW */
+.co-wrap{padding:0 14px;}
+.sec-title{font-size:13px;font-weight:800;color:var(--subtext);margin:12px 0 8px;letter-spacing:.5px;}
+.co-card{background:var(--card);border-radius:18px;padding:14px 16px;margin-bottom:10px;box-shadow:0 3px 14px var(--shadow2);}
+.co-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.co-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.co-name{font-size:15px;font-weight:900;flex:1;}
+.co-actions{display:flex;gap:6px;}
+.ico-btn{background:var(--bg);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:transform .1s;}
+.ico-btn:active{transform:scale(.88);}
+.shift-types{display:flex;flex-wrap:wrap;gap:6px;}
+.st-badge{display:flex;align-items:center;gap:4px;background:var(--kari-bg);border-radius:10px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:all .15s;}
+.st-badge:active{transform:scale(.93);}
+.st-badge .ba{color:var(--accent);font-size:11px;font-weight:700;}
+.add-st-btn{background:none;border:1.5px dashed var(--main);border-radius:10px;padding:5px 12px;font-family:inherit;font-size:12px;font-weight:700;color:var(--subtext);cursor:pointer;}
+.add-co-btn{width:100%;background:none;border:2px dashed var(--main);border-radius:18px;padding:14px;font-family:inherit;font-size:14px;font-weight:800;color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;}
+.add-co-btn:active{background:var(--kari-bg);}
+
+/* OVERLAYS */
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.3);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .18s ease;}
+.overlay.hidden{display:none!important;}
+.sheet{background:var(--card);border-radius:26px 26px 0 0;padding:20px 20px 44px;width:100%;max-width:430px;box-shadow:0 -8px 30px rgba(0,0,0,.12);animation:slideUp .28s cubic-bezier(.4,0,.2,1);max-height:92vh;overflow-y:auto;}
+.sh-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+.sh-title{font-size:16px;font-weight:900;color:var(--accent);text-align:center;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.close-btn{background:#f0f0f0;border:none;border-radius:50%;width:28px;height:28px;font-size:13px;cursor:pointer;color:#999;display:flex;align-items:center;justify-content:center;}
+
+/* DAY SHEET */
+.entries-list{margin-bottom:14px;}
+.entry-item{display:flex;align-items:center;gap:10px;background:var(--kari-bg);border-radius:14px;padding:10px 12px;margin-bottom:7px;}
+.entry-item.ek{background:#fff;border:1.5px dashed var(--kari-border);}
+.e-clr{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.e-info{flex:1;}
+.e-co{font-size:11px;color:var(--subtext);font-weight:700;}
+.e-sh{font-size:13px;font-weight:800;}
+.e-am{font-size:13px;font-weight:900;color:var(--accent);}
+.e-kb{font-size:10px;background:var(--accent);color:white;border-radius:6px;padding:1px 5px;font-weight:700;margin-left:4px;}
+.e-del{background:none;border:none;font-size:16px;cursor:pointer;color:#ccc;padding:4px;line-height:1;}
+
+/* STEP UI */
+.steps{display:flex;gap:6px;margin-bottom:14px;align-items:center;}
+.step{font-size:11px;font-weight:700;color:var(--subtext);padding:4px 10px;border-radius:8px;background:var(--bg);}
+.step.active{background:var(--main);color:var(--text);}
+.step-sep{color:#ccc;font-size:12px;}
+.back-lnk{font-size:12px;color:var(--accent);font-weight:700;cursor:pointer;display:inline-block;margin-bottom:10px;}
+.co-sel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+.co-sel-btn{background:var(--bg);border:1.5px solid var(--main);border-radius:14px;padding:10px 12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;}
+.co-sel-btn:active,.co-sel-btn.sel{background:var(--kari-bg);border-color:var(--accent);}
+.csd{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.csn{font-size:13px;font-weight:800;}
+.sh-sel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+.sh-sel-btn{background:var(--bg);border:1.5px solid var(--main);border-radius:14px;padding:10px 12px;font-family:inherit;cursor:pointer;text-align:left;transition:all .15s;}
+.sh-sel-btn:active,.sh-sel-btn.sel{background:var(--confirm-bg);border-color:var(--accent);}
+.ssb-top{display:flex;align-items:center;gap:6px;margin-bottom:2px;}
+.ssb-emo{font-size:15px;} .ssb-nm{font-size:13px;font-weight:800;}
+.ssb-am{font-size:12px;font-weight:700;color:var(--accent);}
+
+/* TOGGLE */
+.kari-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:12px;border:1.5px solid var(--main);cursor:pointer;margin-bottom:12px;user-select:none;}
+.tog-sw{width:38px;height:22px;background:#ddd;border-radius:11px;position:relative;transition:background .2s;flex-shrink:0;}
+.tog-sw.on{background:var(--accent);}
+.tog-sw::after{content:'';position:absolute;width:18px;height:18px;background:white;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+.tog-sw.on::after{left:18px;}
+.tog-lbl{font-size:13px;font-weight:700;}
+
+/* FIELDS */
+.field-lbl{font-size:12px;font-weight:700;color:var(--subtext);display:block;margin-bottom:5px;}
+.field-in{width:100%;border:1.5px solid var(--main);border-radius:12px;padding:10px 14px;font-size:14px;font-family:inherit;color:var(--text);background:var(--bg);outline:none;margin-bottom:12px;transition:border-color .2s;}
+.field-in:focus{border-color:var(--accent);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.clr-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.clr-sw{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s;}
+.clr-sw.sel{border-color:var(--text);transform:scale(1.1);}
+
+/* BUTTONS */
+.main-btn{width:100%;background:linear-gradient(135deg,var(--main),var(--accent));border:none;border-radius:16px;padding:14px;font-size:16px;font-weight:900;font-family:inherit;color:white;cursor:pointer;box-shadow:0 4px 16px var(--shadow);transition:transform .1s;}
+.main-btn:active{transform:scale(.97);}
+.main-btn:disabled{opacity:.5;cursor:default;}
+.sub-btn{width:100%;background:var(--main);border:none;border-radius:16px;padding:13px;font-size:15px;font-weight:900;font-family:inherit;color:var(--text);cursor:pointer;transition:transform .1s;}
+.sub-btn:active{transform:scale(.97);}
+.del-btn{width:100%;background:none;border:1.5px solid var(--danger);border-radius:16px;padding:11px;font-size:13px;font-weight:800;font-family:inherit;color:var(--danger);cursor:pointer;margin-top:8px;}
+
+/* GOAL MODAL */
+.c-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;animation:fadeIn .18s ease;padding:20px;}
+.c-overlay.hidden{display:none!important;}
+.modal{background:var(--card);border-radius:24px;padding:24px 22px;width:100%;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,.18);animation:popIn .25s cubic-bezier(.4,0,.2,1);}
+.modal-ttl{font-size:16px;font-weight:900;color:var(--accent);text-align:center;margin-bottom:16px;}
+
+/* BOTTOM */
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);border-top:1px solid #eee;padding:8px 20px 18px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:100;}
+.th-btn{width:28px;height:28px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .2s;}
+.th-btn.active{border-color:var(--accent);transform:scale(1.18);}
+.th-btn.t1{background:#9EDFD6;} .th-btn.t2{background:#BFD7FF;} .th-btn.t3{background:#FFB7B2;}
+.th-lbl{font-size:10px;color:var(--subtext);font-weight:700;margin-right:4px;}
+
+/* ANIM */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+
+.empty-st{text-align:center;padding:30px 20px;color:var(--subtext);font-size:13px;font-weight:700;}
+.emo-big{font-size:36px;display:block;margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="summary-card">
+    <div class="month-nav">
+      <button class="nav-btn" onclick="chM(-1)">‹</button>
+      <div class="month-label" id="mLbl"></div>
+      <button class="nav-btn" onclick="chM(1)">›</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item"><div class="stat-lbl">月合計</div><div class="stat-val" id="sM">¥0</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-item"><div class="stat-lbl">仮含む合計</div><div class="stat-val" id="sK">¥0</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-item"><div class="stat-lbl">年間累計</div><div class="stat-val" id="sY">¥0</div></div>
+    </div>
+    <div class="goal-row">
+      <div class="goal-prog"><div class="goal-fill" id="gFill" style="width:0%"></div></div>
+      <div class="goal-txt" id="gTxt">目標未設定</div>
+      <button class="goal-edit" onclick="openGoal()">🎯</button>
+    </div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" id="tCal" onclick="swTab('cal')">📅 カレンダー</button>
+  <button class="tab-btn" id="tCo" onclick="swTab('co')">🏢 会社・シフト管理</button>
+</div>
+
+<!-- CALENDAR -->
+<div id="vCal" class="cal-wrap">
+  <div class="cal-card">
+    <div class="cal-dow">
+      <span class="sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="sat">土</span>
+    </div>
+    <div class="cal-days" id="calDays"></div>
+  </div>
+</div>
+
+<!-- COMPANIES -->
+<div id="vCo" class="co-wrap" style="display:none;">
+  <div class="sec-title">登録済み会社・バイト先</div>
+  <div id="coList"></div>
+  <button class="add-co-btn" onclick="openCoForm()">＋ 会社・バイト先を追加</button>
+</div>
+
+<!-- DAY OVERLAY -->
+<div class="overlay hidden" id="dayOv">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title">
+      <span></span><span id="dayTtl"></span>
+      <button class="close-btn" onclick="closeDay()">✕</button>
+    </div>
+    <div class="entries-list" id="eList"></div>
+    <div id="flow">
+      <!-- step1 -->
+      <div id="s1">
+        <div class="steps">
+          <span class="step active">① 会社を選ぶ</span>
+          <span class="step-sep">›</span>
+          <span class="step">② シフトを選ぶ</span>
+        </div>
+        <div class="co-sel-grid" id="coSelGrid"></div>
+        <div class="empty-st" id="noCoMsg" style="display:none;"><span class="emo-big">🏢</span>まず「会社・シフト管理」で会社を登録してね</div>
+      </div>
+      <!-- step2 -->
+      <div id="s2" style="display:none;">
+        <div class="steps">
+          <span class="step">① 会社</span><span class="step-sep">›</span>
+          <span class="step active">② シフトを選ぶ</span>
+        </div>
+        <span class="back-lnk" onclick="toS1()">‹ 会社を選び直す</span>
+        <div class="sh-sel-grid" id="shSelGrid"></div>
+        <div class="kari-row" onclick="togKari()">
+          <div class="tog-sw" id="kariSw"></div>
+          <span class="tog-lbl">🌙 仮シフト（予定・未確定）</span>
+        </div>
+        <input class="field-in" id="memoIn" type="text" placeholder="📝 メモ（任意）" style="margin-bottom:12px;" />
+        <button class="main-btn" id="addBtn" disabled onclick="doAdd()">✅ 追加する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPANY FORM OVERLAY -->
+<div class="overlay hidden" id="coOv">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title"><span></span><span id="coFTtl">会社を追加</span><button class="close-btn" onclick="closeCo()">✕</button></div>
+    <label class="field-lbl">🏢 会社・バイト先名</label>
+    <input class="field-in" id="coNm" type="text" placeholder="例: スタバ、居酒屋Aなど" />
+    <label class="field-lbl">🎨 カラー</label>
+    <div class="clr-row" id="clrPick"></div>
+    <button class="sub-btn" onclick="saveCo()">保存する</button>
+    <button class="del-btn" id="delCoBtn" style="display:none;" onclick="delCo()">🗑️ この会社を削除</button>
+  </div>
+</div>
+
+<!-- SHIFT TYPE FORM OVERLAY -->
+<div class="overlay hidden" id="stOv">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title"><span></span><span id="stFTtl">シフトを追加</span><button class="close-btn" onclick="closeSt()">✕</button></div>
+    <label class="field-lbl">✨ シフト名</label>
+    <input class="field-in" id="stNm" type="text" placeholder="例: 早番、遅番、深夜など" />
+
+    <div class="row2" style="margin-bottom:0;">
+      <div>
+        <label class="field-lbl">💴 給与タイプ</label>
+        <select class="field-in" id="stPT" onchange="togStPT()">
+          <option value="fixed">固定金額</option>
+          <option value="hourly">時給計算</option>
+        </select>
+      </div>
+      <div id="stFW">
+        <label class="field-lbl">💰 固定金額</label>
+        <input class="field-in" id="stAmt" type="number" placeholder="8500" />
+      </div>
+    </div>
+    <div id="stHW" style="display:none;">
+      <div style="margin-bottom:12px;">
+        <label class="field-lbl">時給 (円)</label>
+        <input class="field-in" id="stWg" type="number" placeholder="1000" oninput="calcH()" style="margin-bottom:0;" />
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="field-lbl">勤務時間</label>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <select class="field-in" id="stHrH" onchange="calcH()" style="margin-bottom:0;flex:1;"></select>
+          <span style="font-weight:700;color:var(--subtext);flex-shrink:0;">時間</span>
+          <select class="field-in" id="stHrM" onchange="calcH()" style="margin-bottom:0;flex:1;"></select>
+          <span style="font-weight:700;color:var(--subtext);flex-shrink:0;">分</span>
+        </div>
+      </div>
+      <div class="row2" style="margin-bottom:12px;">
+        <div><label class="field-lbl">深夜割増 (倍)</label><input class="field-in" id="stNR" type="number" placeholder="1.25" step=".05" oninput="calcH()" style="margin-bottom:0;" /></div>
+        <div>
+          <label class="field-lbl">深夜時間</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <select class="field-in" id="stNHH" onchange="calcH()" style="margin-bottom:0;flex:1;padding-left:6px;"></select>
+            <span style="font-weight:700;color:var(--subtext);font-size:11px;flex-shrink:0;">h</span>
+            <select class="field-in" id="stNHM" onchange="calcH()" style="margin-bottom:0;flex:1;padding-left:6px;"></select>
+            <span style="font-weight:700;color:var(--subtext);font-size:11px;flex-shrink:0;">m</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:12px;" id="hCalc">計算結果: —</div>
+    </div>
+    <button class="sub-btn" onclick="saveSt()">保存する</button>
+    <button class="del-btn" id="delStBtn" style="display:none;" onclick="delSt()">🗑️ このシフトを削除</button>
+  </div>
+</div>
+
+<!-- GOAL MODAL -->
+<div class="c-overlay hidden" id="goalOv">
+  <div class="modal">
+    <div class="modal-ttl">🎯 今月の目標金額</div>
+    <label class="field-lbl">目標金額 (円)</label>
+    <input class="field-in" id="goalIn" type="number" placeholder="例: 150000" />
+    <button class="sub-btn" onclick="saveGoal()">設定する</button>
+    <button style="width:100%;margin-top:8px;background:none;border:none;font-family:inherit;font-size:13px;color:var(--subtext);cursor:pointer;padding:8px;" onclick="closeGoal()">キャンセル</button>
+  </div>
+</div>
+
+<!-- BOTTOM -->
+<div class="bottom-bar">
+  <span class="th-lbl">テーマ:</span>
+  <button class="th-btn t1 active" onclick="setTh('')"></button>
+  <button class="th-btn t2" onclick="setTh('theme-blue')"></button>
+  <button class="th-btn t3" onclick="setTh('theme-peach')"></button>
+</div>
+
+<script>
+const SK='shiftApp_v4';
+let S={companies:[],cal:{},goals:{},theme:''};
+const COLORS=['#FF8C94','#FFB347','#FFD966','#9EDFD6','#7BC6BE','#BFD7FF','#C9A7FF','#FF9ECD','#A8E6CF','#74C0E8'];
+let curY,curM,selDay=null,kariMode=false,selCoId=null,selStId=null;
+let editCoId=null,editStCoId=null,editStId=null,selClr=COLORS[3];
+
+function ld(){try{const d=localStorage.getItem(SK);if(d)S=JSON.parse(d);}catch(e){}
+  if(!S.companies)S.companies=[];if(!S.cal)S.cal={};if(!S.goals)S.goals={};if(!S.theme)S.theme='';}
+function sv(){localStorage.setItem(SK,JSON.stringify(S));}
+function uid(){return Math.random().toString(36).slice(2,10);}
+function dkey(y,m,d){return`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+
+function init(){ld();const n=new Date();curY=n.getFullYear();curM=n.getMonth();applyTh(S.theme,false);render();}
+function render(){rLbl();rCal();rStats();rCos();}
+
+function swTab(t){
+  document.getElementById('vCal').style.display=t==='cal'?'':'none';
+  document.getElementById('vCo').style.display=t==='co'?'':'none';
+  document.getElementById('tCal').classList.toggle('active',t==='cal');
+  document.getElementById('tCo').classList.toggle('active',t==='co');
+}
+
+function chM(d){curM+=d;if(curM>11){curM=0;curY++;}if(curM<0){curM=11;curY--;}rLbl();rCal();rStats();}
+function rLbl(){const mn=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];document.getElementById('mLbl').textContent=`${curY}年 ${mn[curM]}`;}
+
+function mTotal(kari){let t=0;const p=`${curY}-${String(curM).padStart(2,'0')}`;Object.keys(S.cal).forEach(k=>{if(!k.startsWith(p))return;(S.cal[k]||[]).forEach(e=>{if(!e.kari||kari)t+=Number(e.amount)||0;});});return t;}
+function yTotal(){let t=0;const p=`${curY}-`;Object.keys(S.cal).forEach(k=>{if(!k.startsWith(p))return;(S.cal[k]||[]).forEach(e=>{if(!e.kari)t+=Number(e.amount)||0;});});return t;}
+function rStats(){
+  const c=mTotal(false),k=mTotal(true),y=yTotal();
+  document.getElementById('sM').textContent='¥'+c.toLocaleString();
+  document.getElementById('sK').textContent='¥'+k.toLocaleString();
+  document.getElementById('sY').textContent='¥'+y.toLocaleString();
+  const gk=`${curY}-${curM}`,goal=S.goals[gk]||0;
+  if(goal>0){const rem=Math.max(0,goal-k),pct=Math.min(100,k/goal*100);
+    document.getElementById('gFill').style.width=pct+'%';
+    document.getElementById('gTxt').textContent=rem===0?'🎉 達成！':`あと¥${rem.toLocaleString()}`;}
+  else{document.getElementById('gFill').style.width='0%';document.getElementById('gTxt').textContent='目標未設定';}
+}
+
+function rCal(){
+  const w=document.getElementById('calDays');w.innerHTML='';
+  const first=new Date(curY,curM,1).getDay(),days=new Date(curY,curM+1,0).getDate(),td=new Date();
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cal-day empty';w.appendChild(e);}
+  for(let d=1;d<=days;d++){
+    const col=(first+d-1)%7,key=dkey(curY,curM,d),ents=S.cal[key]||[];
+    const isT=td.getFullYear()===curY&&td.getMonth()===curM&&td.getDate()===d;
+    const hc=ents.some(e=>!e.kari),hk=ents.some(e=>e.kari);
+    const el=document.createElement('div');
+    let cls=`cal-day ${col===0?'col-sun':col===6?'col-sat':'col-wd'}`;
+    if(isT)cls+=' today';else if(hc&&hk)cls+=' has-ck';else if(hc)cls+=' has-c';else if(hk)cls+=' has-k';
+    el.className=cls;
+    let html=`<span class="day-num">${d}</span><div class="day-chips">`;
+    ents.slice(0,2).forEach(e=>{
+      const co=S.companies.find(c=>c.id===e.companyId),st=co?.shifts.find(s=>s.id===e.shiftId);
+      if(!co||!st)return;
+      html+=`<div class="day-chip"><span class="chip-nm">${st.name}</span><span class="chip-am">¥${Number(e.amount).toLocaleString()}</span></div>`;
+    });
+    if(ents.length>2)html+=`<span style="font-size:8px;color:var(--subtext)">+${ents.length-2}</span>`;
+    html+=`</div>`;
+    if(hk)html+=`<div class="kari-dot"></div>`;
+    el.innerHTML=html;el.onclick=()=>openDay(d);w.appendChild(el);
+  }
+}
+
+// DAY SHEET
+function openDay(d){
+  selDay=d;kariMode=false;selCoId=null;selStId=null;
+  const mn=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const dw=['日','月','火','水','木','金','土'];
+  document.getElementById('dayTtl').textContent=`${mn[curM]}${d}日 (${dw[new Date(curY,curM,d).getDay()]})`;
+  rEntries();toS1();
+  document.getElementById('memoIn').value='';
+  document.getElementById('dayOv').classList.remove('hidden');
+}
+function closeDay(){document.getElementById('dayOv').classList.add('hidden');selDay=null;}
+
+function rEntries(){
+  const key=dkey(curY,curM,selDay),ents=S.cal[key]||[];
+  const el=document.getElementById('eList');
+  if(!ents.length){el.innerHTML='';return;}
+  el.innerHTML=ents.map((e,i)=>{
+    const co=S.companies.find(c=>c.id===e.companyId),st=co?.shifts.find(s=>s.id===e.shiftId);
+    if(!co||!st)return'';
+    return`<div class="entry-item ${e.kari?'ek':''}">
+      <div class="e-clr" style="background:${co.color}"></div>
+      <div class="e-info">
+        <div class="e-co">${co.name}</div>
+        <div class="e-sh">${st.name}${e.kari?'<span class="e-kb">仮</span>':''}</div>
+        ${e.memo?`<div style="font-size:10px;color:var(--subtext)">${e.memo}</div>`:''}
+      </div>
+      <div class="e-am">¥${Number(e.amount).toLocaleString()}</div>
+      <button class="e-del" onclick="delEnt(${i})">×</button>
+    </div>`;
+  }).join('');
+}
+
+function delEnt(i){
+  const key=dkey(curY,curM,selDay);
+  S.cal[key].splice(i,1);
+  if(!S.cal[key].length)delete S.cal[key];
+  sv();rEntries();rCal();rStats();
+}
+
+function toS1(){
+  document.getElementById('s1').style.display='';document.getElementById('s2').style.display='none';
+  const grid=document.getElementById('coSelGrid'),msg=document.getElementById('noCoMsg');
+  if(!S.companies.length){grid.innerHTML='';msg.style.display='';return;}
+  msg.style.display='none';
+  grid.innerHTML=S.companies.map(co=>
+    `<button class="co-sel-btn" onclick="selCo('${co.id}')"><div class="csd" style="background:${co.color}"></div><span class="csn">${co.name}</span></button>`
+  ).join('');
+}
+
+function selCo(id){
+  selCoId=id;selStId=null;
+  const co=S.companies.find(c=>c.id===id);if(!co)return;
+  const grid=document.getElementById('shSelGrid');
+  if(!co.shifts.length){grid.innerHTML=`<div style="grid-column:span 2;text-align:center;font-size:12px;color:var(--subtext);padding:10px;">シフトがまだ登録されていません</div>`;}
+  else grid.innerHTML=co.shifts.map(st=>
+    `<button class="sh-sel-btn" id="ssb_${st.id}" onclick="selSt('${st.id}')">
+      <div class="ssb-top"><span class="ssb-nm">${st.name}</span></div>
+      <div class="ssb-am">¥${Number(st.amount).toLocaleString()}</div>
+    </button>`
+  ).join('');
+  document.getElementById('kariSw').className='tog-sw';kariMode=false;
+  document.getElementById('addBtn').disabled=true;
+  document.getElementById('s1').style.display='none';document.getElementById('s2').style.display='';
+}
+
+function selSt(id){
+  selStId=id;
+  document.querySelectorAll('.sh-sel-btn').forEach(b=>b.classList.remove('sel'));
+  const b=document.getElementById(`ssb_${id}`);if(b)b.classList.add('sel');
+  document.getElementById('addBtn').disabled=false;
+}
+
+function togKari(){kariMode=!kariMode;document.getElementById('kariSw').className='tog-sw'+(kariMode?' on':'');}
+
+function doAdd(){
+  if(!selCoId||!selStId)return;
+  const co=S.companies.find(c=>c.id===selCoId),st=co?.shifts.find(s=>s.id===selStId);
+  if(!co||!st)return;
+  const key=dkey(curY,curM,selDay);
+  if(!S.cal[key])S.cal[key]=[];
+  S.cal[key].push({companyId:co.id,shiftId:st.id,kari:kariMode,memo:document.getElementById('memoIn').value.trim(),amount:st.amount});
+  sv();rEntries();rCal();rStats();
+  selCoId=null;selStId=null;kariMode=false;
+  document.getElementById('memoIn').value='';
+  toS1();
+}
+
+// COMPANIES
+function rCos(){
+  const el=document.getElementById('coList');
+  if(!S.companies.length){el.innerHTML=`<div class="empty-st"><span class="emo-big">🏢</span>まだ登録がありません</div>`;return;}
+  el.innerHTML=S.companies.map(co=>`
+    <div class="co-card">
+      <div class="co-header">
+        <div class="co-dot" style="background:${co.color}"></div>
+        <div class="co-name">${co.name}</div>
+        <div class="co-actions">
+          <button class="ico-btn" onclick="openCoForm('${co.id}')">✏️</button>
+        </div>
+      </div>
+      <div class="shift-types">
+        ${co.shifts.map(st=>`<div class="st-badge" onclick="openStForm('${co.id}','${st.id}')">${st.name} <span class="ba">¥${Number(st.amount).toLocaleString()}</span></div>`).join('')}
+        <button class="add-st-btn" onclick="openStForm('${co.id}')">＋ シフト追加</button>
+      </div>
+    </div>`).join('');
+}
+
+// COMPANY FORM
+function openCoForm(id){
+  editCoId=id||null;
+  const co=id?S.companies.find(c=>c.id===id):null;
+  document.getElementById('coFTtl').textContent=co?'会社を編集':'会社・バイト先を追加';
+  document.getElementById('coNm').value=co?co.name:'';
+  selClr=co?co.color:COLORS[3];rClrPick();
+  document.getElementById('delCoBtn').style.display=co?'block':'none';
+  document.getElementById('coOv').classList.remove('hidden');
+}
+function closeCo(){document.getElementById('coOv').classList.add('hidden');}
+function rClrPick(){document.getElementById('clrPick').innerHTML=COLORS.map(c=>`<div class="clr-sw ${c===selClr?'sel':''}" style="background:${c}" onclick="pickClr('${c}')"></div>`).join('');}
+function pickClr(c){selClr=c;rClrPick();}
+function saveCo(){
+  const nm=document.getElementById('coNm').value.trim();if(!nm)return;
+  if(editCoId){const co=S.companies.find(c=>c.id===editCoId);if(co){co.name=nm;co.color=selClr;}}
+  else S.companies.push({id:uid(),name:nm,color:selClr,shifts:[]});
+  sv();rCos();closeCo();
+}
+function delCo(){
+  if(!editCoId)return;
+  S.companies=S.companies.filter(c=>c.id!==editCoId);
+  sv();rCos();closeCo();
+}
+
+// SHIFT TYPE FORM
+function buildTimeSelects(){
+  ['stHrH','stNHH'].forEach(id=>{
+    const el=document.getElementById(id);el.innerHTML='';
+    for(let i=0;i<=24;i++)el.innerHTML+=`<option value="${i}">${i}</option>`;
+  });
+  ['stHrM','stNHM'].forEach(id=>{
+    const el=document.getElementById(id);el.innerHTML='';
+    for(let m=0;m<60;m+=5)el.innerHTML+=`<option value="${m}">${String(m).padStart(2,'0')}</option>`;
+  });
+}
+function getHours(hId,mId){return parseInt(document.getElementById(hId).value||0)+(parseInt(document.getElementById(mId).value||0)/60);}
+function setHours(hId,mId,totalH){
+  const h=Math.floor(totalH),m=Math.round((totalH-h)*60);
+  document.getElementById(hId).value=h;
+  // round m to nearest 5
+  const m5=Math.round(m/5)*5;
+  document.getElementById(mId).value=m5>=60?55:m5;
+}
+function openStForm(coId,stId){
+  editStCoId=coId;editStId=stId||null;
+  const co=S.companies.find(c=>c.id===coId),st=stId?co?.shifts.find(s=>s.id===stId):null;
+  document.getElementById('stFTtl').textContent=st?'シフトを編集':`シフト追加（${co?.name}）`;
+  document.getElementById('stNm').value=st?st.name:'';
+  document.getElementById('stPT').value=st?(st.payType||'fixed'):'fixed';
+  document.getElementById('stAmt').value=st?st.amount:'';
+  document.getElementById('stWg').value=st?(st.wage||''):'1000';
+  buildTimeSelects();
+  setHours('stHrH','stHrM', st?(parseFloat(st.hours)||0):8);
+  document.getElementById('stNR').value=st?(st.nightRate||''):'';
+  setHours('stNHH','stNHM', st?(parseFloat(st.nightH)||0):0);
+  document.getElementById('hCalc').textContent='計算結果: —';
+  document.getElementById('delStBtn').style.display=st?'block':'none';
+  togStPT();document.getElementById('stOv').classList.remove('hidden');
+  calcH();
+}
+function closeSt(){document.getElementById('stOv').classList.add('hidden');}
+function togStPT(){const t=document.getElementById('stPT').value;document.getElementById('stFW').style.display=t==='fixed'?'':'none';document.getElementById('stHW').style.display=t==='hourly'?'':'none';}
+function calcH(){
+  const w=parseFloat(document.getElementById('stWg').value)||0;
+  const h=getHours('stHrH','stHrM');
+  const nh=getHours('stNHH','stNHM');
+  const nr=parseFloat(document.getElementById('stNR').value)||1;
+  const t=Math.round(w*Math.max(0,h-nh)+w*nr*nh);
+  document.getElementById('wageWarn') && (document.getElementById('wageWarn').style.display='none');
+  document.getElementById('hCalc').textContent=t>0?`計算結果: ¥${t.toLocaleString()}`:'計算結果: —';
+  document.getElementById('stAmt').value=t||'';
+}
+function saveSt(){
+  const co=S.companies.find(c=>c.id===editStCoId);if(!co)return;
+  const nm=document.getElementById('stNm').value.trim();if(!nm)return;
+  const pt=document.getElementById('stPT').value;
+  if(pt==='hourly')calcH();
+  const amt=parseInt(document.getElementById('stAmt').value)||0;
+  const h=getHours('stHrH','stHrM'), nh=getHours('stNHH','stNHM');
+  const data={name:nm,payType:pt,amount:amt,
+    wage:document.getElementById('stWg').value,hours:h,
+    nightRate:document.getElementById('stNR').value,nightH:nh};
+  if(editStId){const i=co.shifts.findIndex(s=>s.id===editStId);if(i>=0)co.shifts[i]={...co.shifts[i],...data};}
+  else co.shifts.push({id:uid(),...data});
+  sv();rCos();closeSt();
+}
+function delSt(){
+  const co=S.companies.find(c=>c.id===editStCoId);if(!co||!editStId)return;
+  co.shifts=co.shifts.filter(s=>s.id!==editStId);sv();rCos();closeSt();
+}
+
+// GOAL
+function openGoal(){const gk=`${curY}-${curM}`;document.getElementById('goalIn').value=S.goals[gk]||'';document.getElementById('goalOv').classList.remove('hidden');}
+function closeGoal(){document.getElementById('goalOv').classList.add('hidden');}
+function saveGoal(){S.goals[`${curY}-${curM}`]=parseInt(document.getElementById('goalIn').value)||0;sv();rStats();closeGoal();}
+
+// THEME
+function applyTh(cls,p=true){
+  document.body.className=cls;if(p){S.theme=cls;sv();}
+  document.querySelectorAll('.th-btn').forEach(b=>b.classList.remove('active'));
+  if(cls==='')document.querySelector('.t1').classList.add('active');
+  else if(cls==='theme-blue')document.querySelector('.t2').classList.add('active');
+  else if(cls==='theme-peach')document.querySelector('.t3').classList.add('active');
+}
+function setTh(c){applyTh(c);}
+
+// BG close
+['dayOv','coOv','stOv'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id)){
+    if(id==='dayOv')closeDay();else if(id==='coOv')closeCo();else closeSt();
+  }});
+});
+document.getElementById('goalOv').addEventListener('click',e=>{if(e.target===document.getElementById('goalOv'))closeGoal();});
+
+init();
+</script>
+</body>
+</html>

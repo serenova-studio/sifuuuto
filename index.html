@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>シフト給与管理</title>
+<title>しふめも</title>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -144,7 +144,7 @@ body::after{
 /* OVERLAYS */
 .overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.2);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .18s ease;}
 .overlay.hidden{display:none!important;}
-.sheet{background:rgba(255,255,255,0.30);backdrop-filter:blur(36px);-webkit-backdrop-filter:blur(36px);border:1px solid rgba(255,255,255,0.50);border-radius:26px 26px 0 0;padding:20px 20px 44px;width:100%;max-width:430px;box-shadow:0 -8px 30px rgba(0,0,0,.08);animation:slideUp .28s cubic-bezier(.4,0,.2,1);max-height:92vh;overflow-y:auto;}
+.sheet{background:rgba(255,255,255,0.30);backdrop-filter:blur(36px);-webkit-backdrop-filter:blur(36px);border:1px solid rgba(255,255,255,0.50);border-radius:26px 26px 0 0;padding:20px 20px 60px;width:100%;max-width:430px;box-shadow:0 -8px 30px rgba(0,0,0,.08);animation:slideUp .28s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .sh-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
 .sh-title{font-size:16px;font-weight:900;color:var(--accent);text-align:center;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
 .close-btn{background:#f0f0f0;border:none;border-radius:50%;width:28px;height:28px;font-size:13px;cursor:pointer;color:#999;display:flex;align-items:center;justify-content:center;}
@@ -317,7 +317,9 @@ body.has-bg-img .bg-blob3,body.has-bg-img::before,body.has-bg-img::after{display
           <span class="tog-lbl">🌙 仮シフト（予定・未確定）</span>
         </div>
         <input class="field-in" id="memoIn" type="text" placeholder="📝 メモ（任意）" style="margin-bottom:12px;" />
-        <button class="main-btn" id="addBtn" disabled onclick="doAdd()">✅ 追加する</button>
+        <div style="position:sticky;bottom:0;padding-top:4px;background:transparent;">
+          <button class="main-btn" id="addBtn" disabled onclick="doAdd()">✅ 追加する</button>
+        </div>
       </div>
     </div>
   </div>
@@ -386,7 +388,9 @@ body.has-bg-img .bg-blob3,body.has-bg-img::before,body.has-bg-img::after{display
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:12px;" id="hCalc">計算結果: —</div>
     </div>
-    <button class="sub-btn" onclick="saveSt()">保存する</button>
+    <div style="position:sticky;bottom:0;padding-top:10px;background:transparent;">
+      <button class="sub-btn" onclick="saveSt()">保存する</button>
+    </div>
     <button class="del-btn" id="delStBtn" style="display:none;" onclick="delSt()">🗑️ このシフトを削除</button>
   </div>
 </div>

@@ -318,7 +318,7 @@ body.has-bg-img .bg-blob3,body.has-bg-img::before,body.has-bg-img::after{display
         </div>
         <input class="field-in" id="memoIn" type="text" placeholder="📝 メモ（任意）" style="margin-bottom:12px;" />
         <div style="position:sticky;bottom:0;padding-top:4px;background:transparent;">
-          <button class="main-btn" id="addBtn" disabled onclick="doAdd()">✅ 追加する</button>
+          <button class="main-btn" id="addBtn" onclick="doAdd()">✅ 追加する</button>
         </div>
       </div>
     </div>
@@ -544,29 +544,33 @@ function selCo(id){
   selCoId=id;selStId=null;
   const co=S.companies.find(c=>c.id===id);if(!co)return;
   const grid=document.getElementById('shSelGrid');
-  if(!co.shifts.length){grid.innerHTML=`<div style="grid-column:span 2;text-align:center;font-size:12px;color:var(--subtext);padding:10px;">シフトがまだ登録されていません</div>`;}
-  else grid.innerHTML=co.shifts.map(st=>
-    `<button class="sh-sel-btn" id="ssb_${st.id}" onclick="selSt('${st.id}')">
-      <div class="ssb-top"><span class="ssb-nm">${st.name}</span></div>
-      <div class="ssb-am">¥${Number(st.amount).toLocaleString()}</div>
-    </button>`
-  ).join('');
+  if(!co.shifts.length){
+    grid.innerHTML=`<div style="grid-column:span 2;text-align:center;font-size:12px;color:var(--subtext);padding:10px;">シフトがまだ登録されていません</div>`;
+  } else {
+    grid.innerHTML=co.shifts.map((st,i)=>
+      `<button class="sh-sel-btn" data-stid="${st.id}" onclick="selSt(this,'${st.id}')">
+        <div class="ssb-top"><span class="ssb-nm">${st.name}</span></div>
+        <div class="ssb-am">¥${Number(st.amount).toLocaleString()}</div>
+      </button>`
+    ).join('');
+  }
   document.getElementById('kariSw').className='tog-sw';kariMode=false;
-  document.getElementById('addBtn').disabled=true;
-  document.getElementById('s1').style.display='none';document.getElementById('s2').style.display='';
+  document.getElementById('s1').style.display='none';
+  document.getElementById('s2').style.display='';
 }
 
-function selSt(id){
+function selSt(el,id){
   selStId=id;
   document.querySelectorAll('.sh-sel-btn').forEach(b=>b.classList.remove('sel'));
-  const b=document.getElementById(`ssb_${id}`);if(b)b.classList.add('sel');
-  document.getElementById('addBtn').disabled=false;
+  el.classList.add('sel');
 }
 
 function togKari(){kariMode=!kariMode;document.getElementById('kariSw').className='tog-sw'+(kariMode?' on':'');}
 
 function doAdd(){
-  if(!selCoId||!selStId)return;
+  if(!selCoId||!selStId){
+    alert('シフトを選んでください');return;
+  }
   const co=S.companies.find(c=>c.id===selCoId),st=co?.shifts.find(s=>s.id===selStId);
   if(!co||!st)return;
   const key=dkey(curY,curM,selDay);

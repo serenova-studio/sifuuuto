@@ -474,6 +474,7 @@ function bindEvents(){
   document.getElementById('multiDelBtn').addEventListener('click',doMultiDel);
   document.getElementById('modeAddBtn').addEventListener('click',()=>setMultiMode('add'));
   document.getElementById('modeDelBtn').addEventListener('click',()=>setMultiMode('del'));
+  document.getElementById('prevM').addEventListener('click',()=>chM(-1));
   document.getElementById('nextM').addEventListener('click',()=>chM(1));
   document.getElementById('tCal').addEventListener('click',()=>swTab('cal'));
   document.getElementById('tMulti').addEventListener('click',()=>swTab('multi'));

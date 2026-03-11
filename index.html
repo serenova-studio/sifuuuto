@@ -235,12 +235,18 @@ body.has-bg-img .bg-blob3,body.has-bg-img::before,body.has-bg-img::after{display
 <!-- MULTI SELECT VIEW -->
 <div id="vMulti" class="cal-wrap" style="display:none;">
   <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.28);border-radius:18px;padding:12px 14px;margin-bottom:10px;">
-    <div style="font-size:12px;font-weight:800;color:var(--accent);margin-bottom:6px;">日付をタップして選択</div>
+    <div style="font-size:12px;font-weight:800;color:var(--accent);margin-bottom:4px;" id="multiModeLabel">✅ 追加モード：日付を選んでまとめて追加</div>
+    <div style="font-size:11px;color:var(--subtext);font-weight:700;margin-bottom:6px;">※ 入力済みの日をタップすると修正できます</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button id="modeAddBtn" style="flex:1;background:linear-gradient(135deg,var(--main),var(--accent));border:none;border-radius:10px;padding:7px;font-family:inherit;font-size:12px;font-weight:800;color:white;cursor:pointer;">✅ まとめて追加</button>
+      <button id="modeDelBtn" style="flex:1;background:none;border:1.5px solid var(--danger);border-radius:10px;padding:7px;font-family:inherit;font-size:12px;font-weight:800;color:var(--danger);cursor:pointer;">🗑️ まとめて削除</button>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <span id="multiSelCount" style="font-size:13px;font-weight:800;color:var(--text);">0日選択中</span>
       <div style="display:flex;gap:6px;">
         <button id="multiClearBtn" style="background:none;border:1.5px solid #ccc;border-radius:8px;padding:5px 10px;font-family:inherit;font-size:12px;font-weight:800;color:#aaa;cursor:pointer;">クリア</button>
         <button id="multiAddBtn" style="background:linear-gradient(135deg,var(--main),var(--accent));border:none;border-radius:8px;padding:5px 14px;font-family:inherit;font-size:12px;font-weight:800;color:white;cursor:pointer;">✅ 追加する</button>
+        <button id="multiDelBtn" style="display:none;background:var(--danger);border:none;border-radius:8px;padding:5px 14px;font-family:inherit;font-size:12px;font-weight:800;color:white;cursor:pointer;">🗑️ 削除する</button>
       </div>
     </div>
   </div>
@@ -433,7 +439,7 @@ const COLORS=['#FF8C94','#FFB347','#FFD966','#9EDFD6','#7BC6BE','#BFD7FF','#C9A7
 let S={companies:[],cal:{},goals:{},theme:''};
 let curY,curM,selDay=null,kariMode=false,selCoId=null;
 let editCoId=null,selClr=COLORS[3],editPatterns=[];
-let multiSelMode=false,multiSelDays=new Set();
+let multiSelMode=false,multiSelDays=new Set(),multiMode='add'; // multiMode: 'add' | 'del'
 
 function ld(){
   try{const d=localStorage.getItem(SK);if(d)S=JSON.parse(d);}catch(e){}
@@ -465,6 +471,9 @@ function render(){rLbl();rCal();rCalMulti();rStats();rCos();}
 function bindEvents(){
   document.getElementById('multiClearBtn').addEventListener('click',()=>{multiSelDays=new Set();rCalMulti();updateMultiCount();});
   document.getElementById('multiAddBtn').addEventListener('click',openMultiDay);
+  document.getElementById('multiDelBtn').addEventListener('click',doMultiDel);
+  document.getElementById('modeAddBtn').addEventListener('click',()=>setMultiMode('add'));
+  document.getElementById('modeDelBtn').addEventListener('click',()=>setMultiMode('del'));
   document.getElementById('nextM').addEventListener('click',()=>chM(1));
   document.getElementById('tCal').addEventListener('click',()=>swTab('cal'));
   document.getElementById('tMulti').addEventListener('click',()=>swTab('multi'));
@@ -543,7 +552,7 @@ function swTab(t){
   document.getElementById('tCal').classList.toggle('active',t==='cal');
   document.getElementById('tMulti').classList.toggle('active',t==='multi');
   document.getElementById('tCo').classList.toggle('active',t==='co');
-  if(t==='multi'){multiSelDays=new Set();rCalMulti();updateMultiCount();}
+  if(t==='multi'){multiSelDays=new Set();setMultiMode('add');}
 }
 function chM(d){curM+=d;if(curM>11){curM=0;curY++;}if(curM<0){curM=11;curY--;}multiSelDays=new Set();rLbl();rCal();rCalMulti();rStats();}
 function rLbl(){const mn=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];document.getElementById('mLbl').textContent=`${curY}年 ${mn[curM]}`;}
@@ -600,6 +609,29 @@ function rCal(){
 function updateMultiCount(){
   document.getElementById('multiSelCount').textContent=`${multiSelDays.size}日選択中`;
 }
+function setMultiMode(mode){
+  multiMode=mode;
+  multiSelDays=new Set();
+  const isAdd=mode==='add';
+  document.getElementById('modeAddBtn').style.opacity=isAdd?'1':'0.45';
+  document.getElementById('modeDelBtn').style.opacity=isAdd?'0.45':'1';
+  document.getElementById('multiAddBtn').style.display=isAdd?'':'none';
+  document.getElementById('multiDelBtn').style.display=isAdd?'none':'';
+  document.getElementById('multiModeLabel').textContent=isAdd
+    ?'✅ 追加モード：日付を選んでまとめて追加'
+    :'🗑️ 削除モード：削除したい日を選んでまとめて削除';
+  document.getElementById('multiModeLabel').style.color=isAdd?'var(--accent)':'var(--danger)';
+  rCalMulti();updateMultiCount();
+}
+function doMultiDel(){
+  if(!multiSelDays.size){alert('削除する日付を選んでください');return;}
+  if(!confirm(`${multiSelDays.size}日分のシフトをすべて削除しますか？`))return;
+  multiSelDays.forEach(d=>{
+    const key=dkey(curY,curM,d);
+    delete S.cal[key];
+  });
+  sv();multiSelDays=new Set();rCal();rCalMulti();rStats();updateMultiCount();
+}
 function rCalMulti(){
   const w=document.getElementById('calDaysMulti');w.innerHTML='';
   const first=new Date(curY,curM,1).getDay(),days=new Date(curY,curM+1,0).getDate(),td=new Date();
@@ -624,6 +656,16 @@ function rCalMulti(){
     if(hk)html+=`<div class="kari-dot"></div>`;
     el.innerHTML=html;
     el.addEventListener('click',()=>{
+      if(multiMode==='del'){
+        // 削除モード：入力済みの日だけ選択可
+        if(!ents.length)return;
+        if(multiSelDays.has(d)){multiSelDays.delete(d);el.classList.remove('multi-sel');}
+        else{multiSelDays.add(d);el.classList.add('multi-sel');}
+        updateMultiCount();
+        return;
+      }
+      // 追加モード：入力済みの日はタップで修正シート
+      if(ents.length>0){openDay(d);return;}
       if(multiSelDays.has(d)){multiSelDays.delete(d);el.classList.remove('multi-sel');}
       else{multiSelDays.add(d);el.classList.add('multi-sel');}
       updateMultiCount();
@@ -657,7 +699,7 @@ function openDay(d){
   rEntries();toS1();
   document.getElementById('dayOv').classList.remove('hidden');
 }
-function closeDay(){document.getElementById('dayOv').classList.add('hidden');selDay=null;}
+function closeDay(){document.getElementById('dayOv').classList.add('hidden');selDay=null;rCal();rCalMulti();rStats();}
 
 function rEntries(){
   const key=dkey(curY,curM,selDay),ents=S.cal[key]||[];

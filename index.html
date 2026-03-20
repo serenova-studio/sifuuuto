@@ -666,14 +666,6 @@ function rCal(){
     el.innerHTML=html;
     el.addEventListener('click',()=>openDay(d));
     w.appendChild(el);
-    // 締日の後に区切り線を挿入
-    const cd=S.closingDay||0;
-    const actualCD=cd===31?new Date(curY,curM+1,0).getDate():cd;
-    if(cd&&d===actualCD){
-      const line=document.createElement('div');
-      line.className='closing-line-row';
-      w.appendChild(line);
-    }
   }
 }
 
@@ -746,13 +738,6 @@ function rCalMulti(){
       updateMultiCount();
     });
     w.appendChild(el);
-    const cd=S.closingDay||0;
-    const actualCD=cd===31?new Date(curY,curM+1,0).getDate():cd;
-    if(cd&&d===actualCD){
-      const line=document.createElement('div');
-      line.className='closing-line-row';
-      w.appendChild(line);
-    }
   }
 }
 function enterMultiSel(){}

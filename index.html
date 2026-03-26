@@ -57,10 +57,6 @@ body::after{width:240px;height:240px;bottom:80px;left:-70px;background:radial-gr
 .stat-item{text-align:center;padding:0 4px;}
 .stat-lbl{font-size:10px;color:var(--subtext);margin-bottom:2px;}
 .stat-val{font-size:15px;font-weight:900;color:var(--accent);line-height:1.1;}
-.goal-row{display:flex;align-items:center;gap:8px;}
-.goal-prog{flex:1;height:7px;background:#eee;border-radius:10px;overflow:hidden;}
-.goal-fill{height:100%;background:linear-gradient(90deg,var(--main),var(--accent));border-radius:10px;transition:width .6s cubic-bezier(.4,0,.2,1);}
-.goal-txt{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;}
 
 .tab-bar{display:flex;background:var(--card);backdrop-filter:var(--card-blur);-webkit-backdrop-filter:var(--card-blur);border:1px solid var(--card-border);border-radius:16px;padding:4px;margin:8px 14px;box-shadow:0 2px 10px var(--shadow2);position:relative;z-index:1;}
 .tab-btn{flex:1;padding:8px 4px;border:none;background:none;font-family:inherit;font-size:12px;font-weight:700;color:var(--subtext);border-radius:12px;cursor:pointer;transition:all .2s;}
@@ -71,7 +67,7 @@ body::after{width:240px;height:240px;bottom:80px;left:-70px;background:radial-gr
 .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:4px;}
 .cal-dow span{font-size:11px;font-weight:800;padding:3px 0;}
 .cal-dow .sun{color:var(--sun);}.cal-dow .sat{color:var(--sat);}
-.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;overflow:hidden;}
 .cal-day{border-radius:10px;padding:3px 2px 4px;cursor:pointer;transition:all .15s;min-height:54px;display:flex;flex-direction:column;align-items:center;position:relative;}
 .cal-day:active{transform:scale(.93);}
 .cal-day.empty{cursor:default;pointer-events:none;}
@@ -87,7 +83,7 @@ body::after{width:240px;height:240px;bottom:80px;left:-70px;background:radial-gr
 .day-chips{display:flex;flex-direction:column;align-items:center;gap:1px;width:100%;}
 .day-chip{width:100%;text-align:center;}
 .chip-co{font-size:7px;font-weight:700;color:var(--subtext);line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
-.chip-am{font-size:9px;font-weight:900;color:var(--accent);line-height:1.2;}
+.chip-am{font-size:9px;font-weight:900;color:var(--accent);line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .kari-dot{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.7;}
 
 .co-wrap{padding:0 14px;position:relative;z-index:1;}
@@ -187,6 +183,8 @@ body.has-bg-img .bg-blob3,body.has-bg-img::before,body.has-bg-img::after{display
 .emo-big{font-size:36px;display:block;margin-bottom:8px;}
 .cal-clr-btn{background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.4);border-radius:10px;padding:8px;font-family:inherit;font-size:12px;font-weight:800;color:var(--text);cursor:pointer;transition:all .15s;}
 .cal-clr-btn.active{background:var(--main);border-color:var(--accent);}
+.goal-type-btn{background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.4);border-radius:10px;padding:8px;font-family:inherit;font-size:12px;font-weight:800;color:var(--subtext);cursor:pointer;transition:all .15s;}
+.goal-type-btn.active{background:var(--main);border-color:var(--accent);color:var(--text);}
 .cal-white .day-num,.cal-white .cal-dow span{color:white!important;}
 .cal-white .chip-co{color:rgba(255,255,255,0.85)!important;}
 .cal-white .chip-am{color:white!important;}
@@ -216,19 +214,26 @@ body.has-bg-img .bg-blob3,body.has-bg-img::before,body.has-bg-img::after{display
       <div class="stat-item"><div class="stat-lbl">年間累計</div><div class="stat-val" id="sY">¥0</div></div>
     </div>
     <!-- 締日エリア -->
-    <div id="closingRow" style="display:none;background:rgba(255,255,255,0.15);border-radius:10px;padding:7px 12px;margin-bottom:8px;align-items:center;justify-content:space-between;cursor:pointer;" id="closingRow">
-      <div>
+    <div id="closingRow" style="display:none;background:rgba(255,255,255,0.15);border-radius:10px;padding:7px 12px;margin-bottom:8px;align-items:center;justify-content:space-between;cursor:pointer;">
+      <div style="flex:1;">
         <div style="font-size:10px;font-weight:800;color:var(--subtext);" id="closingLbl">締め期間</div>
         <div style="font-size:14px;font-weight:900;color:var(--accent);" id="sC">¥0</div>
+        <div id="goalProgRow" style="display:none;margin-top:4px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="flex:1;height:5px;background:rgba(255,255,255,0.3);border-radius:10px;overflow:hidden;">
+              <div id="goalProgFill" style="height:100%;background:linear-gradient(90deg,var(--main),var(--accent));border-radius:10px;transition:width .6s;width:0%;"></div>
+            </div>
+            <span id="goalProgTxt" style="font-size:10px;font-weight:800;color:var(--subtext);white-space:nowrap;"></span>
+          </div>
+        </div>
       </div>
-      <div style="font-size:10px;font-weight:700;color:var(--subtext);">タップして変更 ›</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:8px;flex-shrink:0;">
+        <div style="font-size:10px;font-weight:700;color:var(--subtext);">タップして変更 ›</div>
+        <button id="openGoalInClosing" style="background:none;border:none;font-family:inherit;font-size:10px;font-weight:800;color:var(--subtext);cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;padding:0;">🎯 目標を設定</button>
+      </div>
     </div>
-    <div id="closingSetRow" style="display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+    <div id="closingSetRow" style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;">
       <button id="openClosingBtn" style="background:none;border:none;font-family:inherit;font-size:11px;font-weight:800;color:var(--subtext);cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;">＋ 締日を設定する</button>
-    </div>
-    <div class="goal-row">
-      <div class="goal-prog"><div class="goal-fill" id="gFill" style="width:0%"></div></div>
-      <div class="goal-txt" id="gTxt">目標未設定</div>
     </div>
   </div>
 </div>
@@ -457,11 +462,32 @@ body.has-bg-img .bg-blob3,body.has-bg-img::before,body.has-bg-img::after{display
 <!-- GOAL MODAL -->
 <div class="c-overlay hidden" id="goalOv">
   <div class="modal">
-    <div class="modal-ttl">🎯 今月の目標金額</div>
+    <div class="modal-ttl">🎯 目標金額の設定</div>
+    <!-- 期間タイプ切替 -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button id="goalTypeClosing" class="goal-type-btn active" style="flex:1;">締日ベース</button>
+      <button id="goalTypeCustom" class="goal-type-btn" style="flex:1;">期間指定</button>
+    </div>
+    <!-- 締日ベース説明 -->
+    <div id="goalClosingInfo" style="font-size:11px;color:var(--subtext);font-weight:700;text-align:center;margin-bottom:10px;background:rgba(255,255,255,0.2);border-radius:8px;padding:7px;"></div>
+    <!-- 期間指定 -->
+    <div id="goalCustomRange" style="display:none;margin-bottom:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div class="field-lbl">開始日</div>
+          <input class="field-in" id="goalStartDate" type="date" style="margin-bottom:0;">
+        </div>
+        <div>
+          <div class="field-lbl">終了日</div>
+          <input class="field-in" id="goalEndDate" type="date" style="margin-bottom:0;">
+        </div>
+      </div>
+    </div>
     <label class="field-lbl">目標金額 (円)</label>
     <input class="field-in" id="goalIn" type="number" placeholder="例: 150000">
     <button class="sub-btn" id="saveGoalBtn">設定する</button>
-    <button id="cancelGoalBtn" style="width:100%;margin-top:8px;background:none;border:none;font-family:inherit;font-size:13px;color:var(--subtext);cursor:pointer;padding:8px;">キャンセル</button>
+    <button id="goalOffBtn" style="width:100%;margin-top:6px;background:none;border:1.5px solid #ccc;border-radius:12px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;color:#aaa;cursor:pointer;">目標を解除する</button>
+    <button id="cancelGoalBtn" style="width:100%;margin-top:6px;background:none;border:none;font-family:inherit;font-size:13px;color:var(--subtext);cursor:pointer;padding:6px;">キャンセル</button>
   </div>
 </div>
 
@@ -488,7 +514,8 @@ function ld(){
   if(!S.cal)S.cal={};
   if(!S.goals)S.goals={};
   if(!S.calColor)S.calColor='default';
-  if(!S.closingDay)S.closingDay=0; // 0=設定なし
+  if(!S.closingDay)S.closingDay=0;
+  if(!S.goalSetting)S.goalSetting={}; // 0=設定なし
   // 旧データ移行
   S.companies.forEach(co=>{
     if(!co.patterns)co.patterns=(co.shifts||[]).map(s=>s.amount).filter(a=>a>0);
@@ -541,10 +568,12 @@ function bindEvents(){
   document.getElementById('tCal').addEventListener('click',()=>swTab('cal'));
   document.getElementById('tMulti').addEventListener('click',()=>swTab('multi'));
   document.getElementById('tCo').addEventListener('click',()=>swTab('co'));
-  document.getElementById('gTxt').addEventListener('click',openGoal);
   document.getElementById('saveGoalBtn').addEventListener('click',saveGoal);
   document.getElementById('cancelGoalBtn').addEventListener('click',closeGoal);
+  document.getElementById('goalOffBtn').addEventListener('click',clearGoal);
   document.getElementById('goalOv').addEventListener('click',e=>{if(e.target===document.getElementById('goalOv'))closeGoal();});
+  document.getElementById('goalTypeClosing').addEventListener('click',()=>setGoalType('closing'));
+  document.getElementById('goalTypeCustom').addEventListener('click',()=>setGoalType('custom'));
   document.getElementById('closeDayBtn').addEventListener('click',closeDay);
   document.getElementById('dayOv').addEventListener('click',e=>{if(e.target===document.getElementById('dayOv'))closeDay();});
   document.getElementById('backLnk').addEventListener('click',toS1);
@@ -598,6 +627,8 @@ function bindEvents(){
   document.getElementById('delConfirmOkBtn').addEventListener('click',execMultiDel);
   document.getElementById('delConfirmCancelBtn').addEventListener('click',()=>document.getElementById('delConfirmOv').classList.add('hidden'));
   document.getElementById('delConfirmOv').addEventListener('click',e=>{if(e.target===document.getElementById('delConfirmOv'))document.getElementById('delConfirmOv').classList.add('hidden');});
+  document.getElementById('openGoalInClosing').addEventListener('click',(e)=>{e.stopPropagation();openGoal();});
+  document.getElementById('openClosingBtn').addEventListener('click',openClosing);
   document.getElementById('closingRow').addEventListener('click',openClosing);
   document.getElementById('saveClosingBtn').addEventListener('click',saveClosing);
   document.getElementById('closingOffBtn').addEventListener('click',()=>{S.closingDay=0;sv();closeClosing();rStats();rCal();rCalMulti();});
@@ -633,12 +664,21 @@ function rStats(){
   document.getElementById('sM').textContent='¥'+c.toLocaleString();
   document.getElementById('sK').textContent='¥'+k.toLocaleString();
   document.getElementById('sY').textContent='¥'+y.toLocaleString();
-  const gk=`${curY}-${curM}`,goal=S.goals[gk]||0;
-  if(goal>0){const rem=Math.max(0,goal-k),pct=Math.min(100,k/goal*100);
-    document.getElementById('gFill').style.width=pct+'%';
-    document.getElementById('gTxt').textContent=rem===0?'🎉 達成！':`あと¥${rem.toLocaleString()}`;}
-  else{document.getElementById('gFill').style.width='0%';document.getElementById('gTxt').textContent='目標未設定';}
-  // 締日合計
+  // 月合計プログレスバー（目標が月ベースの場合のみ）
+  const gs=S.goalSetting||{};
+  const goalAmt=gs.amount||0;
+  // カスタム期間合計
+  function customTotal(){
+    if(!gs.startDate||!gs.endDate)return 0;
+    const start=new Date(gs.startDate),end=new Date(gs.endDate);
+    let t=0;
+    Object.keys(S.cal).forEach(k=>{
+      const d=new Date(k);
+      if(d>=start&&d<=end)(S.cal[k]||[]).forEach(e=>{if(!e.kari)t+=Number(e.amount)||0;});
+    });
+    return t;
+  }
+  // 締日合計＋目標
   const cr=closingTotal();
   const crow=document.getElementById('closingRow');
   const csetrow=document.getElementById('closingSetRow');
@@ -646,9 +686,21 @@ function rStats(){
     const mn=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
     document.getElementById('closingLbl').textContent=`${mn[cr.startM]}${cr.start}日〜${mn[curM]}${S.closingDay===31?'末日':`${cr.end}日`}締め`;
     document.getElementById('sC').textContent='¥'+cr.total.toLocaleString();
+    const progRow=document.getElementById('goalProgRow');
+    if(goalAmt){
+      const baseTotal=gs.type==='custom'?customTotal():cr.total;
+      const pct=Math.min(100,baseTotal/goalAmt*100);
+      const rem=Math.max(0,goalAmt-baseTotal);
+      document.getElementById('goalProgFill').style.width=pct+'%';
+      document.getElementById('goalProgTxt').textContent=rem===0?'🎉 達成！':`あと¥${rem.toLocaleString()}`;
+      progRow.style.display='';
+    }else{
+      progRow.style.display='none';
+    }
     crow.style.display='flex';
     csetrow.style.display='none';
   }else{
+    document.getElementById('goalProgRow').style.display='none';
     crow.style.display='none';
     csetrow.style.display='flex';
   }
@@ -850,7 +902,8 @@ function selCo(id){
     const btn=document.createElement('button');
     btn.className='amt-preset-btn';
     btn.textContent='¥'+Number(amt).toLocaleString();
-    btn.addEventListener('click',()=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
       document.getElementById('amtIn').value=amt;
       presetsEl.querySelectorAll('.amt-preset-btn').forEach(b=>b.classList.remove('sel'));
       btn.classList.add('sel');
@@ -1093,9 +1146,55 @@ function closingTotal(){
   }
   return {total:t,start:startDay+1,startM:prevM,end:lastDay};
 }
-function openGoal(){const gk=`${curY}-${curM}`;document.getElementById('goalIn').value=S.goals[gk]||'';document.getElementById('goalOv').classList.remove('hidden');}
+// GOAL
+let goalType='closing'; // 'closing' | 'custom'
+function openGoal(){
+  // 現在の設定を読み込む
+  const g=S.goalSetting||{};
+  goalType=g.type||'closing';
+  document.getElementById('goalIn').value=g.amount||'';
+  setGoalType(goalType);
+  // 期間指定の場合は日付を復元
+  if(g.startDate)document.getElementById('goalStartDate').value=g.startDate;
+  if(g.endDate)document.getElementById('goalEndDate').value=g.endDate;
+  document.getElementById('goalOv').classList.remove('hidden');
+}
+function setGoalType(t){
+  goalType=t;
+  document.getElementById('goalTypeClosing').classList.toggle('active',t==='closing');
+  document.getElementById('goalTypeCustom').classList.toggle('active',t==='custom');
+  document.getElementById('goalCustomRange').style.display=t==='custom'?'':'none';
+  // 締日ベース説明
+  const info=document.getElementById('goalClosingInfo');
+  if(t==='closing'){
+    const cr=closingTotal();
+    if(cr){
+      const mn=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+      info.textContent=`${mn[cr.startM]}${cr.start}日〜${mn[curM]}${S.closingDay===31?'末日':`${cr.end}日`}の期間が対象`;
+      info.style.display='';
+    }else{
+      info.textContent='⚠️ 先に締日を設定してください';
+      info.style.display='';
+    }
+  }else{
+    info.style.display='none';
+  }
+}
 function closeGoal(){document.getElementById('goalOv').classList.add('hidden');}
-function saveGoal(){S.goals[`${curY}-${curM}`]=parseInt(document.getElementById('goalIn').value)||0;sv();rStats();closeGoal();}
+function saveGoal(){
+  const amt=parseInt(document.getElementById('goalIn').value)||0;
+  if(!S.goalSetting)S.goalSetting={};
+  S.goalSetting.type=goalType;
+  S.goalSetting.amount=amt;
+  if(goalType==='custom'){
+    S.goalSetting.startDate=document.getElementById('goalStartDate').value;
+    S.goalSetting.endDate=document.getElementById('goalEndDate').value;
+  }
+  sv();rStats();closeGoal();
+}
+function clearGoal(){
+  S.goalSetting={};sv();rStats();closeGoal();
+}
 
 // THEME
 function applyTh(cls,persist=true){
